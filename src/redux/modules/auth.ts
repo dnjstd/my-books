@@ -1,5 +1,13 @@
 //인증 관리
-import { createActions, handleActions } from "redux-actions";
+import {
+  Action,
+  createAction,
+  createActions,
+  handleActions,
+} from "redux-actions";
+import { call, put, takeEvery } from "redux-saga/effects";
+import UserService from "../../services/UserService";
+import { LoginReqType } from "../../types";
 
 interface AuthState {
   token: string | null;
@@ -48,6 +56,25 @@ const reducer = handleActions<AuthState, string>(
 export default reducer;
 
 // saga
+
+export const { login, logout } = createActions("LOGIN", "LOGOUT", { prefix });
+
+function* loginSaga(action: Action<LoginReqType>) {
+  try {
+    yield put(pending());
+    const token: string = yield call(UserService.login, action.payload);
+    //localstorage
+    yield put(success(token));
+    //push
+  } catch (error) {
+    yield put(fail(new Error(error?.response?.data?.error || "UNKNOWN_ERROR")));
+  }
+}
+
+function logoutSaga() {}
+
 export function* authSaga() {
   //auth의 sideEffects 로직
+  yield takeEvery(`${prefix}/LOGIN`, loginSaga);
+  yield takeEvery(`${prefix}/LOGOUT`, logoutSaga);
 }
