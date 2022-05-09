@@ -1,4 +1,5 @@
 //인증 관리
+import { push } from "connected-react-router";
 import {
   Action,
   createAction,
@@ -6,6 +7,7 @@ import {
   handleActions,
 } from "redux-actions";
 import { call, put, takeEvery } from "redux-saga/effects";
+import TokenService from "../../services/TokenService";
 import UserService from "../../services/UserService";
 import { LoginReqType } from "../../types";
 
@@ -63,10 +65,10 @@ function* loginSaga(action: Action<LoginReqType>) {
   try {
     yield put(pending());
     const token: string = yield call(UserService.login, action.payload);
-    //localstorage
+    TokenService.set(token);
     yield put(success(token));
-    //push
-  } catch (error) {
+    yield put(push("/"));
+  } catch (error: any) {
     yield put(fail(new Error(error?.response?.data?.error || "UNKNOWN_ERROR")));
   }
 }
